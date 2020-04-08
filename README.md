@@ -1,2 +1,2 @@
-# Mapping-corrnavirus
+# Mapping-covid19
 Uses pythons folium to create an html file that contains information about coronavirus visually displayed onto the USA map.
