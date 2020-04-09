@@ -1,9 +1,17 @@
+'''
+    @author - Erik Jones
+    This program creates a interactive map using the library folium. On the map is the current amount of cases in each state along with the total number of cases
+    (The marker is located in the atlantic ocean.) Also included on the map is an choropleth map, which is currently done in log form because of the big variation 
+    of cases located in the united states. Finally, this program takes in twitterSent.py which is a sentiment analysis and puts on the map the overall feeling about
+    Covid-19.
+'''
 import folium
 import pandas as pd
 import os
 import requests
 import csv
 import math
+import twitterSent
 from folium import IFrame
 #List of all states, notice how some just say "North", that is used below to check if it is simply a state. Will make more efficent if have time
 states = [
@@ -111,6 +119,8 @@ statesSolo = [
     'Wisconsin',
     'Wyoming',
 ]
+print("Calculating, please wait.......")
+Sent_result = twitterSent.info()
 
 #The website that contains the information needed, this is a good website because its stays the same url
 url = "https://www.worldometers.info/coronavirus/country/us/"
@@ -134,7 +144,6 @@ for word in f.read().split():
         break
     if(virCheck == 1 and word == 'Virginia'):
         state = state + ' ' + word
-        #print(state)
         citySet.append(state)
         virCheck = 0
         state = ''
@@ -144,14 +153,12 @@ for word in f.read().split():
         state = state + ' ' + word
         dc = state + ' Columbia'
         citySet.append(dc)
-        #print(dc)
         state = ''
         islong = 0
         continue
     if(word in states2 and islong == 1):
         state = state + ' ' + word
         citySet.append(state)
-        #print(state)
         state = ''
         islong = 0
         continue
@@ -159,7 +166,6 @@ for word in f.read().split():
         commaRemove = word.replace('text-align:right">','')
         finalanswer = commaRemove.replace(',','')
         if(finalanswer.isdigit()):
-            #print(finalanswer)
             numberSet.append(finalanswer)
             isstate = 0
             count = count + 1
@@ -171,20 +177,14 @@ for word in f.read().split():
             virCheck = 1
         if(word in statesSolo):
             citySet.append(word)
-            #print(word)
         isstate = 1
         islong = 1
         state = word
 
 
-#print(numberSet)
-
 #Makes copy to be used later for the markers
 markernumberset = numberSet.copy()
-markercityset = citySet.copy()
-#print(markernumberset)
-#print(markercityset)
-#print(citySet)           
+markercityset = citySet.copy()          
 
 with open ('mycsv.csv', 'w', newline= '') as f:
     thewriter = csv.writer(f)
@@ -197,11 +197,11 @@ with open ('mycsv.csv', 'w', newline= '') as f:
         thewriter.writerow([stateout,answerlog])
     
 
-states = os.path.join('bigtest','us-states.json')
+states = os.path.join('states_geodata','us-states.json')
 unemployement_data = os.path.join('mycsv.csv')
 state_data = pd.read_csv(unemployement_data)
 
-m = folium.Map(location = [48, -102], zoom_start =3)
+m = folium.Map(location = [48, -102], zoom_start =4,min_zoom = 3)
 b = folium.FeatureGroup(name='Log Scale')
 
 #Creates the shading of map from data. (change to coronavirus data later)
@@ -224,6 +224,7 @@ a = folium.FeatureGroup(name='Data about each State (Markers on Map)')
 
 #global tooltip
 tooltip = "Click for more info"
+
 #Adding all 50 states markers that display the actual amount of cases
 totalNumOfInfected = 0
 for i in range (51):
@@ -438,7 +439,6 @@ for i in range (51):
     #Wyoming
         a.add_child(folium.Marker([43.075970, -107.290283],popup='Infected: ' + numpop,tooltip=tooltip,icon=folium.Icon(icon = 'bookmark',color='green' ))).add_to(m)
 
-#print(totalNumOfInfected)
 testint3 = (f"{totalNumOfInfected: ,d}")
 totalNumOfInfected = str(testint3)
 
@@ -449,6 +449,26 @@ iframe = folium.IFrame(text,width=300, height=60)
 popup= folium.Popup(iframe, max_width=300)
 Text = folium.Marker(location= [32.953368, -70.533021],popup=popup,icon = folium.Icon(icon_color='green'))
 c.add_child(Text).add_to(m)
+
+emotion = Sent_result.pop('emotion')
+emotion_total = Sent_result.pop(emotion)
+total_tweets = Sent_result.pop('total')
+
+#The logo icons for possitive,neutral, negative
+positive_icon = folium.features.CustomIcon('images/positive.png', icon_size =(50,50))
+negative_icon = folium.features.CustomIcon('images/negative.png', icon_size =(50,50))
+neutral_icon  = folium.features.CustomIcon('images/neutral.png', icon_size =(50,50))
+
+
+text1 = 'Total number of tweets analyzed: ' + str(total_tweets) + '<br>' + 'Overall feeling on the coronavirus: ' + str(emotion) + '<br>' + 'Total number of ' + str(emotion) + ' tweets: ' + str(emotion_total)
+iframe1 = folium.IFrame(text1,width=400, height=70)
+popup1= folium.Popup(iframe1, max_width=400)
+if(emotion == 'neutral'):
+    c.add_child(folium.Marker([37.953368, -130.533021],popup=popup1,tooltip=tooltip,icon=neutral_icon)).add_to(m)
+elif(emotion == 'negative'):
+    c.add_child(folium.Marker([37.953368, -130.533021],popup=popup1,tooltip=tooltip,icon=neutral_icon)).add_to(m)
+elif(emotion == 'positive'):
+    c.add_child(folium.Marker([37.953368, -130.533021],popup=popup1,tooltip=tooltip,icon=neutral_icon)).add_to(m)
 
 folium.LayerControl().add_to(m)
 m.save('Covid-19 map.html')
