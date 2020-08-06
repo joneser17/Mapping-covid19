@@ -7,3 +7,4 @@ Place 'covidMap' and 'twitterSent' into your workspace along with the folders 's
 
 to install all necessary libraries do...         
 pip install -r requirements.txt
+![covid-project.png](https://i.ibb.co/ZKSjfjw/covid-project.png)
