@@ -17,10 +17,11 @@ class TwitterClient():
         initialization method. 
         '''
         #Keys and tokens for twitter api
-        consumer_key = 'ZrbkmNaM9Q1GADDK2P8A3tEYN'
-        consumer_secret = 'nK6rQSxK9HitLn6C4XVTwj8Mbwy6wpI1ZR4QHsfELkfqcMa02U'
-        access_token = '1246496043509915648-HrhDOzReRfTdZ899wydYRmGUpgLz7U'
-        access_token_secret = 'XTIkKFcANo9h37ezOFCXbUY6TRUj7NWO5njFcyYkhI0E5'
+        #Removed personal keys, if you wanna use enter your own api for twitter sentiment analysis
+        consumer_key = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+        consumer_secret = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+        access_token = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+        access_token_secret = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
   
         #Attempts authentication 
         try:  
