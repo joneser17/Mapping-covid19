@@ -53,6 +53,7 @@ states = [
     'Rhode',
     'South',
     'Tennessee',
+    'Puerto',
     'Texas',
     'Utah',
     'Vermont',
@@ -72,6 +73,7 @@ states2 = [
     'Carolina',
     'Dakota',
     'Island',
+    'Rico',
     'Carolina',
     'Virgina',
 ]
@@ -136,10 +138,12 @@ state = ''
 count = 0
 numberSet = []
 citySet = []
+num_states = 52
 
 #Opens the file that is download from the website, so everytime this program runs the numbers are updated.
 f = open('file.txt')
 for word in f.read().split():
+    #print(word)
     hrefCheck = word[0:4]
     if (hrefCheck == 'href'):
         theString = word.find('>')
@@ -149,7 +153,7 @@ for word in f.read().split():
         word = newstateGet1 
     if (isstate == 1):
         word = word.replace('</a>','')
-    if(count > 50):
+    if(count >= num_states):
         break
     if(virCheck == 1 and word == 'Virginia'):
         state = state + ' ' + word
@@ -198,7 +202,7 @@ markercityset = citySet.copy()
 with open ('mycsv.csv', 'w', newline= '') as f:
     thewriter = csv.writer(f)
     thewriter.writerow(['State','Infected'])
-    for i in range(51):
+    for i in range(num_states):
         numout = numberSet.pop(0)
         logint = int(numout)
         answerlog = (math.log10(logint))
@@ -235,7 +239,7 @@ tooltip = "Click for more info"
 
 #Adding all 50 states markers that display the actual amount of cases
 totalNumOfInfected = 0
-for i in range (51):
+for i in range (num_states):
     numpop = markernumberset.pop(0)
     statepop = markercityset.pop(0)
     testint1 = int(numpop)
@@ -398,6 +402,10 @@ for i in range (51):
     if(statepop == 'Pennsylvania'):
     #Pennsylvania
         a.add_child(folium.Marker([41.203323, -77.194527],popup='Infected: ' + numpop,tooltip=tooltip,icon=folium.Icon(icon = 'bookmark',color='green' ))).add_to(m)
+
+    if(statepop == 'Puerto Rico'):
+    #Puerto Rico
+        a.add_child(folium.Marker([18.200178, -66.664513],popup='Infected: ' + numpop,tooltip=tooltip,icon=folium.Icon(icon = 'bookmark',color='green' ))).add_to(m)
 
     if(statepop == 'Rhode Island'):
     #Rhode Island
