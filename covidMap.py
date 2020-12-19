@@ -11,7 +11,7 @@ import os
 import requests
 import csv
 import math
-import twitterSent
+# import twitterSent (Twitter sentiment analysis,off by default)
 from folium import IFrame
 #List of all states, notice how some just say "North", that is used below to check if it is simply a state. Will make more efficent if have time
 states = [
@@ -120,7 +120,7 @@ statesSolo = [
     'Wyoming',
 ]
 print("Calculating, please wait.......")
-Sent_result = twitterSent.info()
+# Sent_result = twitterSent.info()              #(Twitter sentiment analysis,off by default)
 
 #The website that contains the information needed, this is a good website because its stays the same url
 url = "https://www.worldometers.info/coronavirus/country/us/"
@@ -140,6 +140,15 @@ citySet = []
 #Opens the file that is download from the website, so everytime this program runs the numbers are updated.
 f = open('file.txt')
 for word in f.read().split():
+    hrefCheck = word[0:4]
+    if (hrefCheck == 'href'):
+        theString = word.find('>')
+        sizeofword = len(word)
+        hrefremove = word[theString + 1:sizeofword]
+        newstateGet1 = hrefremove.replace('</a>','')
+        word = newstateGet1 
+    if (isstate == 1):
+        word = word.replace('</a>','')
     if(count > 50):
         break
     if(virCheck == 1 and word == 'Virginia'):
@@ -165,7 +174,7 @@ for word in f.read().split():
     if(isstate == 1):
         commaRemove = word.replace('text-align:right">','')
         finalanswer = commaRemove.replace(',','')
-        if(finalanswer.isdigit()):
+        if(finalanswer.isdigit() and finalanswer != '0'):
             numberSet.append(finalanswer)
             isstate = 0
             count = count + 1
@@ -176,7 +185,7 @@ for word in f.read().split():
         if(word == 'West'):
             virCheck = 1
         if(word in statesSolo):
-            citySet.append(word)
+            citySet.append(word)   
         isstate = 1
         islong = 1
         state = word
@@ -198,8 +207,8 @@ with open ('mycsv.csv', 'w', newline= '') as f:
     
 
 states = os.path.join('states_geodata','us-states.json')
-unemployement_data = os.path.join('mycsv.csv')
-state_data = pd.read_csv(unemployement_data)
+infection_data = os.path.join('mycsv.csv')
+state_data = pd.read_csv(infection_data)
 
 m = folium.Map(location = [48, -102], zoom_start =4,min_zoom = 3)
 b = folium.FeatureGroup(name='Log Scale')
@@ -220,7 +229,6 @@ folium.Choropleth (
 #Global tooltip
 tooltip = 'Click for more information'
 a = folium.FeatureGroup(name='Data about each State (Markers on Map)')
-#Image for coronavrius picture (custom marker)
 
 #global tooltip
 tooltip = "Click for more info"
@@ -449,6 +457,8 @@ iframe = folium.IFrame(text,width=300, height=60)
 popup= folium.Popup(iframe, max_width=300)
 Text = folium.Marker(location= [32.953368, -70.533021],popup=popup,icon = folium.Icon(icon_color='green'))
 c.add_child(Text).add_to(m)
+'''
+(Twitter sentiment analysis,off by default)
 
 emotion = Sent_result.pop('emotion')
 emotion_total = Sent_result.pop(emotion)
@@ -469,6 +479,7 @@ elif(emotion == 'negative'):
     c.add_child(folium.Marker([37.953368, -130.533021],popup=popup1,tooltip=tooltip,icon=neutral_icon)).add_to(m)
 elif(emotion == 'positive'):
     c.add_child(folium.Marker([37.953368, -130.533021],popup=popup1,tooltip=tooltip,icon=neutral_icon)).add_to(m)
+'''
 
 folium.LayerControl().add_to(m)
 m.save('Covid-19 map.html')
