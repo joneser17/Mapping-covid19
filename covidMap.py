@@ -133,7 +133,7 @@ class state_info():
 #The website that contains the information needed, this is a good website because its stays the same url
 url = "https://www.worldometers.info/coronavirus/country/us/"
 r = requests.get(url)
-with open('file.txt', 'w') as file:
+with open('data/data.txt', 'w') as file:
     file.write(r.text)
 
 #Variables that are used within the function to get the necesary data from the website, Yes kind of confusing but it works
@@ -148,7 +148,7 @@ num_states = 52
 states_list = []
 recent_state = ''
 #Opens the file that is download from the website, so everytime this program runs the numbers are updated.
-f = open('file.txt')
+f = open('data/data.txt')
 for word in f.read().split():
     #print(word)
     hrefCheck = word[0:4]
@@ -208,7 +208,7 @@ for word in f.read().split():
         state = word
 
 # Contains state name and log base 10 of cases.        
-with open ('mycsv.csv', 'w', newline= '') as f:
+with open ('data/state_log_info.csv', 'w', newline= '') as f:
     thewriter = csv.writer(f)
     thewriter.writerow(['State','Infected'])
     for i in range(num_states):
@@ -217,13 +217,14 @@ with open ('mycsv.csv', 'w', newline= '') as f:
         answerlog = (math.log10(logint))
         stateout = citySet.pop(0)
         thewriter.writerow([stateout,answerlog])
-    
+
+# Creates choropleth map with log base 10 of cases.   
 states = os.path.join('states_geodata','us-states.json')
-infection_data = os.path.join('mycsv.csv')
+infection_data = os.path.join('data/state_log_info.csv')
 state_data = pd.read_csv(infection_data)
 
-m = folium.Map(location = [48, -102], zoom_start =4,min_zoom = 3)
-b = folium.FeatureGroup(name='Log Scale')
+covid_map = folium.Map(location = [48, -102], zoom_start =4,min_zoom = 3)
+layer_log = folium.FeatureGroup(name='Log Scale')
 
 #Creates the shading of map from data. (change to coronavirus data later)
 folium.Choropleth (
@@ -236,9 +237,9 @@ folium.Choropleth (
     fill_color='OrRd',
     fill_opacity= 0.75,
     line_opacity= 0.4,
-    ).add_to(m)
+    ).add_to(covid_map)
 
-a = folium.FeatureGroup(name='Data about each State (Markers on Map)')
+layer_markers = folium.FeatureGroup(name='Data about each State (Markers on Map)')
 
 # Global tooltip
 tooltip = "Click for more info"
@@ -257,15 +258,15 @@ for i in states_list:
     cords = state_dict.get(i.state_name)
     cases = int(i.state_cases)
     total_us_cases = total_us_cases + cases
-    a.add_child(folium.Marker([cords[0],cords[1]],popup='Infected: ' + (f"{int(i.state_cases): ,d}"),tooltip=tooltip,icon=folium.Icon(icon = 'bookmark',color='green' ))).add_to(m)
+    layer_markers.add_child(folium.Marker([cords[0],cords[1]],popup='Infected: ' + (f"{int(i.state_cases): ,d}"),tooltip=tooltip,icon=folium.Icon(icon = 'bookmark',color='green' ))).add_to(covid_map)
 
-c = folium.FeatureGroup(name='Other information about Covid-19 in the USA')
+Layer_other = folium.FeatureGroup(name='Other information about Covid-19 in the USA')
 
 text = 'Total number of infected in the USA: ' + str((f"{total_us_cases: ,d}"))
 iframe = folium.IFrame(text,width=300, height=60)
 popup= folium.Popup(iframe, max_width=300)
 Text = folium.Marker(location= [32.953368, -70.533021],popup=popup,icon = folium.Icon(icon_color='green'))
-c.add_child(Text).add_to(m)
+Layer_other.add_child(Text).add_to(covid_map)
 '''
 (Twitter sentiment analysis,off by default)
 
@@ -290,6 +291,6 @@ elif(emotion == 'positive'):
     c.add_child(folium.Marker([37.953368, -130.533021],popup=popup1,tooltip=tooltip,icon=neutral_icon)).add_to(m)
 '''
 
-folium.LayerControl().add_to(m)
-m.save('Covid-19 map.html')
+folium.LayerControl().add_to(covid_map)
+covid_map.save('Covid-19 map.html')
 print('Map created, Now open in browser!')
