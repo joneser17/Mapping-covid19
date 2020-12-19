@@ -11,6 +11,7 @@ import os
 import requests
 import csv
 import math
+import datetime
 # import twitterSent (Twitter sentiment analysis,off by default)
 from folium import IFrame
 #List of all states, notice how some just say "North", that is used below to check if it is simply a state. Will make more efficent if have time
@@ -292,5 +293,6 @@ elif(emotion == 'positive'):
 '''
 
 folium.LayerControl().add_to(covid_map)
-covid_map.save('Covid-19 map.html')
+date = datetime.date.today()
+covid_map.save('Maps/Covid-19 map (' + str(date) + ').html')
 print('Map created, Now open in browser!')
