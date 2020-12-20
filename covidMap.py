@@ -14,9 +14,24 @@ import math
 import datetime
 # import twitterSent (Twitter sentiment analysis,off by default)
 from folium import IFrame
-#List of all states, notice how some just say "North", that is used below to check if it is simply a state. Will make more efficent if have time
-states = [
-	'Alabama',
+
+print("Calculating, please wait.......")
+# Sent_result = twitterSent.info()              #(Twitter sentiment analysis,off by default)
+
+
+class state_info():
+    def __init__(self,name,cases):
+        self.state_name = name
+        self.state_cases = cases
+
+#The website that contains the information needed, this is a good website because its stays the same url
+url = "https://www.worldometers.info/coronavirus/country/us/"
+r = requests.get(url)
+with open('data/data.txt', 'w') as file:
+    file.write(r.text)
+
+NewStates = [
+    'Alabama',
     'Alaska',
     'Arizona',
     'Arkansas',
@@ -57,16 +72,14 @@ states = [
     'Puerto',
     'Texas',
     'Utah',
+    'Of',
+    'Columbia',
     'Vermont',
     'Virginia',
     'Washington',
     'West',
     'Wisconsin',
     'Wyoming',
-]
-
-#States that have multiple words, like "North Carolina"
-states2 = [
     'Hampshire',
     'Jersey',
     'Mexico',
@@ -79,145 +92,52 @@ states2 = [
     'Virgina',
 ]
 
-#States that are just one word
-statesSolo = [
-    'Alabama',
-    'Alaska',
-    'Arizona',
-    'Arkansas',
-    'California',
-    'Colorado',
-    'Connecticut',
-    'Delaware',
-    'Florida',
-    'Georgia',
-    'Hawaii',
-    'Idaho',
-    'Illinois',
-    'Indiana',
-    'Iowa',
-    'Kansas',
-    'Kentucky',
-    'Louisiana',
-    'Maine',
-    'Maryland',
-    'Massachusetts',
-    'Michigan',
-    'Minnesota',
-    'Mississippi',
-    'Missouri',
-    'Montana',
-    'Nebraska',
-    'Nevada',
-    'Ohio',
-    'Oklahoma',
-    'Oregon',
-    'Pennsylvania',
-    'Tennessee',
-    'Texas',
-    'Utah',
-    'Vermont',
-    'Virginia',
-    'Washington',
-    'Wisconsin',
-    'Wyoming',
-]
-print("Calculating, please wait.......")
-# Sent_result = twitterSent.info()              #(Twitter sentiment analysis,off by default)
-
-
-class state_info():
-    def __init__(self,name,cases):
-        self.state_name = name
-        self.state_cases = cases
-
-#The website that contains the information needed, this is a good website because its stays the same url
-url = "https://www.worldometers.info/coronavirus/country/us/"
-r = requests.get(url)
-with open('data/data.txt', 'w') as file:
-    file.write(r.text)
-
-#Variables that are used within the function to get the necesary data from the website, Yes kind of confusing but it works
-isstate = 0
-islong= 0
-virCheck = 0
-state = ''
-count = 0
-numberSet = []
-citySet = []
-num_states = 52
 states_list = []
-recent_state = ''
-#Opens the file that is download from the website, so everytime this program runs the numbers are updated.
+seen = False
+count = 0
+currentState = ''
+num_states = 52
+
+# Scrapes state name and amount of cases from website.
 f = open('data/data.txt')
 for word in f.read().split():
-    #print(word)
-    hrefCheck = word[0:4]
-    if (hrefCheck == 'href'):
-        theString = word.find('>')
-        sizeofword = len(word)
-        hrefremove = word[theString + 1:sizeofword]
-        newstateGet1 = hrefremove.replace('</a>','')
-        word = newstateGet1 
-    if (isstate == 1):
-        word = word.replace('</a>','')
     if(count >= num_states):
         break
-    if(virCheck == 1 and word == 'Virginia'):
-        state = state + ' ' + word
-        citySet.append(state)
-        recent_state = state
-        virCheck = 0
-        state = ''
-        islong = 0
-        continue        
-    if(word =='Of' and islong == 1):
-        state = state + ' ' + word
-        dc = state + ' Columbia'
-        citySet.append(dc)
-        recent_state = dc
-        state = ''
-        islong = 0
-        continue
-    if(word in states2 and islong == 1):
-        state = state + ' ' + word
-        citySet.append(state)
-        recent_state = state
-        state = ''
-        islong = 0
-        continue
-    if(isstate == 1):
-        commaRemove = word.replace('text-align:right">','')
-        finalanswer = commaRemove.replace(',','')
-        if(finalanswer.isdigit() and finalanswer != '0'):
-            numberSet.append(finalanswer)
-            the_state = state_info(recent_state,finalanswer)
-            states_list.append(the_state)
-            isstate = 0
-            count = count + 1
-            continue
+    if(seen == False):
+        hrefCheck = word[0:4]
+        if (hrefCheck == 'href'):
+            theString = word.find('>')
+            sizeofword = len(word)
+            hrefremove = word[theString + 1:sizeofword]
+            newstateGet1 = hrefremove.replace('</a>','')
+            if(newstateGet1 in NewStates):     
+                seen = True
+                currentState = newstateGet1
         else:
-            continue       
-    if(word in states):
-        if(word == 'West'):
-            virCheck = 1
-        if(word in statesSolo):
-            citySet.append(word)
-            recent_state = word
-        isstate = 1
-        islong = 1
-        state = word
+            if(word in NewStates):
+                currentState = word
+                seen = True
+    else:
+        word = word.replace('</a>','')
+        if(word in NewStates):
+            currentState = currentState + ' ' + word
+        else:
+            commaRemove = word.replace('text-align:right">','')
+            finalanswer = commaRemove.replace(',','')
+            if(finalanswer.isdigit() and finalanswer != '0'):
+                the_state = state_info(currentState,finalanswer)
+                states_list.append(the_state)
+                count = count + 1
+                seen = False
+            
 
 # Contains state name and log base 10 of cases.        
 with open ('data/state_log_info.csv', 'w', newline= '') as f:
     thewriter = csv.writer(f)
     thewriter.writerow(['State','Infected'])
-    for i in range(num_states):
-        numout = numberSet.pop(0)
-        logint = int(numout)
-        answerlog = (math.log10(logint))
-        stateout = citySet.pop(0)
-        thewriter.writerow([stateout,answerlog])
+    for key in states_list:
+        answerlog = (math.log10(int(key.state_cases)))
+        thewriter.writerow([key.state_name,answerlog])
 
 # Creates choropleth map with log base 10 of cases.   
 states = os.path.join('states_geodata','us-states.json')
@@ -252,7 +172,6 @@ for line in f:
     items = line.split(",")
     state_dict[items[0]] = items[1],items[2]
     
-
 total_us_cases = 0
 # Places markers on the map containing the cases with the corresponding state.
 for i in states_list:
